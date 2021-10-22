@@ -1,9 +1,10 @@
-console.log('Olá mundo!');
+console.log('Olá BrazilJS!');
 
-let ligacaoAtual
+let ligacaoAtual;
+let response;
 
-document.addEventListener('DOMContentLoaded', async () => {
-	const response = await fetch('/token', {method: 'POST'} );
+const inicializa = async () => {
+	response = await fetch('/token', {method: 'POST'} );
 	const data = await response.json();
 
     device = new Twilio.Device(data.token, {
@@ -12,6 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		debug: false,
 	});
 	let activeConnection;
+
+    console.log('inicializando device.');
 
 	device.on('ready', (device) => {
 		console.log('Telefone no navegador está funcionando!');
@@ -50,6 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnAtender = document.getElementById('btnAtender');
     const btnDesligar = document.getElementById('btnDesligar');
     const btnRecusar = document.getElementById('btnRecusar');
+    const btnMute = document.getElementById('btnMute');
+    const btnUnmute = document.getElementById('btnUnmute');
+
 
     btnAtender.addEventListener('click', () => {
         if (ligacaoAtual) {
@@ -70,6 +76,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         ligacaoAtual = null;
     });
+
+    btnMute.addEventListener('click', () => {
+        if (ligacaoAtual) {
+            ligacaoAtual.mute();
+        }
+    });
+    btnUnmute.addEventListener('click', () => {
+        if (ligacaoAtual) {
+            ligacaoAtual.unmute();
+        }
+    });
+
 
 
     btnLigar.addEventListener('click', () => {
@@ -99,9 +117,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 break;
         }
     };
+}
 
-
-});
+document.addEventListener('DOMContentLoaded', inicializa);
 
 
 
