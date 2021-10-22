@@ -38,7 +38,7 @@ app.post('/token', async (req, res) => {
     accessToken.addGrant(grant);
 
     res.send({
-        identity: process.env.IDENTIFY,
+        identity: process.env.IDENTITY,
         token: accessToken.toJwt()
     });
 });
