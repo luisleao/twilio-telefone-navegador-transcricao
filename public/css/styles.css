@@ -1,0 +1,12 @@
+#txtRemoto {
+    background-color: teal;
+    color: white;
+    padding: 10pt;
+    margin: 10px 0;
+}
+#txtLocal {
+    background-color: orange;
+    color: white;
+    padding: 10pt;
+    margin: 10px 0;
+}
