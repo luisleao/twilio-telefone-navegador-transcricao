@@ -44,22 +44,25 @@ app.post('/token', async (req, res) => {
 });
 
 
-app.post('/entrada', async (req, res) => {
-    console.log('entrada!')
+app.all('/entrada', async (req, res) => {
+    console.log('entrada!', req.body);
 	res.contentType('xml');
 	const twiml = new VoiceResponse();
-    twiml.say({ language: 'pt-BR', voice: 'Polly.Camila-Neural' }, 'Aguarde... Estamos conectando com o Leão!')
+    twiml.say({ 
+        language: 'pt-BR', 
+        voice: 'Polly.Camila-Neural' 
+    }, 'Aguarde... Estamos conectando com o Leão!')
 	
 	// incluir transcricao
     twiml.start().stream({
         track: 'inbound_track', // inbound_track, outbound_track, both_tracks
         name: `${req.body.CallSid}-remoto`,
-        url: `wss://leao.ngrok.io/${req.body.CallSid}-remoto`
+        url: `wss://${req.headers.host}/${req.body.CallSid}-remoto-${req.body.From}`
     });
     twiml.start().stream({
         track: 'outbound_track', // inbound_track, outbound_track, both_tracks
         name: `${req.body.CallSid}-local`,
-        url: `wss://leao.ngrok.io/${req.body.CallSid}-local`
+        url: `wss://${req.headers.host}/${req.body.CallSid}-local-${req.body.To}`
     });
     const dial = twiml.dial();
     dial.client(process.env.IDENTITY);
@@ -76,12 +79,12 @@ app.post('/saida', async (req, res) => {
     twiml.start().stream({
         track: 'inbound_track', // inbound_track, outbound_track, both_tracks
         name: `${req.body.CallSid}-local`,
-        url: `wss://leao.ngrok.io/${req.body.CallSid}-local`
+        url: `wss://${req.headers.host}/${req.body.CallSid}-local-${req.body.From}`
     });
     twiml.start().stream({
         track: 'outbound_track', // inbound_track, outbound_track, both_tracks
         name: `${req.body.CallSid}-remoto`,
-        url: `wss://leao.ngrok.io/${req.body.CallSid}-remoto`
+        url: `wss://${req.headers.host}/${req.body.CallSid}-remoto-${req.body.To}`
     });
 
 	const dial = twiml.dial({ 
@@ -97,13 +100,13 @@ app.post('/saida', async (req, res) => {
 
 
 
-
+const { escondeNumero } = require('./util.js');
 
 let wsTranscricao;
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws, req) => {
-    const callSid = req.url.replace('/', '');
+    const [callSid, inout, fromNumber] = req.url.replace('/', '').split('-');
     console.log('WSS CONNECTION ', callSid);
     switch (callSid) {
         case 'transcricao':
@@ -115,12 +118,11 @@ wss.on('connection', (ws, req) => {
                 .streamingRecognize(request)
                 .on("error", console.error)
                 .on("data", async data => {
-                    let inout = req.url.replace('/', '').split('-')[1];
-                    console.log('SPEECH: ', inout, ' > ', data.results[0].alternatives[0].transcript);
+                    console.log('SPEECH: ', inout, ' > ', escondeNumero(fromNumber), data.results[0].alternatives[0].transcript);
                     if (wsTranscricao) {
                         wsTranscricao.send(JSON.stringify({
                             direcao: inout,
-                            transcricao: data.results[0].alternatives[0].transcript
+                            transcricao: escondeNumero(fromNumber) + ': ' + data.results[0].alternatives[0].transcript
                         }));
                     } else {
                         console.log('sem websocket');
@@ -157,7 +159,9 @@ const request = {
 	config: {
 		encoding: "MULAW",
 		sampleRateHertz: 8000,
-		languageCode: "pt-BR"
+		languageCode: "pt-BR",
+        enableAutomaticPunctuation: true,
+        profanityFilter: true
 	},
 	interimResults: true
 };

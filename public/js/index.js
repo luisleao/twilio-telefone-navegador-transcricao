@@ -1,4 +1,4 @@
-console.log('Olá BrazilJS!');
+console.log('Olá DevFest!');
 
 let ligacaoAtual;
 let response;
@@ -92,7 +92,7 @@ const inicializa = async () => {
 
     btnLigar.addEventListener('click', () => {
         console.log('botao!');
-        var ligacao = device.connect({ To: '+5511983370955' });
+        var ligacao = device.connect({ To: 'SEU_TELEFONE' });
         console.log('ligacao', ligacao);
     });
 
